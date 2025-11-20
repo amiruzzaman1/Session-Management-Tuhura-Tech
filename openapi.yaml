@@ -1,0 +1,194 @@
+openapi: 3.0.3
+info:
+  title: Session Management API
+  description: |
+    API for user registration, authentication, and session management.
+    This API provides a clean separation between frontend and backend,
+    allowing independent development and modification.
+  version: 1.0.0
+  contact:
+    name: Tuhura Tech
+    
+servers:
+  - url: http://127.0.0.1:8000
+    description: Development server
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account with email, username, and password
+      operationId: registerUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              validRegistration:
+                value:
+                  email: "user@example.com"
+                  username: "johndoe"
+                  password: "StrongPassword123"
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterSuccessResponse'
+        '400':
+          description: Email or username already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailExists:
+                  value:
+                    detail: "Email already registered"
+
+  /api/auth/login:
+    post:
+      summary: Login user
+      description: Authenticates a user and returns access and refresh tokens
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              validLogin:
+                value:
+                  email: "user@example.com"
+                  password: "StrongPassword123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    detail: "Invalid email or password"
+
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - username
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: Unique username
+          example: "johndoe"
+        password:
+          type: string
+          minLength: 8
+          description: Strong password
+          example: "StrongPassword123"
+
+    RegisterSuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "User registered successfully"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          description: User's password
+          example: "StrongPassword123"
+
+    LoginSuccessResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          description: JWT refresh token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          example: "bearer"
+        user:
+          $ref: '#/components/schemas/UserInfo'
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User ID
+          example: 6
+        email:
+          type: string
+          format: email
+          description: User's email
+          example: "user@example.com"
+        roles:
+          type: array
+          items:
+            type: string
+          description: User roles
+          example: ["staff"]
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Invalid email or password"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Authentication
+    description: User authentication and registration endpoints
